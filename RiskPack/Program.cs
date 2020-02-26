@@ -1,9 +1,32 @@
-﻿using Newtonsoft.Json;
+﻿/*
+MIT License
+
+Copyright (c) 2020 Whitespace Software Limited
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using WSShared;
 
@@ -21,6 +44,7 @@ namespace RiskPack
         {
             if( args.Length < 2 )
             {
+                WSUtilities.PrintVersionMesssage("RiskPack", "1.0");
                 Console.WriteLine("riskpack.exe [settings file] [riskID]");
                 Console.WriteLine("riskpack.exe --example [settings file]");
                 return;
@@ -55,10 +79,10 @@ namespace RiskPack
                 return;
             }
             WSAPIClient client = WSAPIClient.ForToken(settings);
-            string json = String.Empty, req = String.Empty, folder = String.Empty;
+            string json = String.Empty, req = String.Empty;
             try
             {
-                folder = Utilities.MakeSafeFilename(args[1]) + DateTime.Now.ToString("_ddMMyy_HHmmss");
+                string folder = WSUtilities.MakeSafeFilename(args[1]) + DateTime.Now.ToString("_ddMMyy_HHmmss");
                 Directory.CreateDirectory(folder);
 
                 req = "/sync/" + settings.bucket + "/_oidc_refresh?refresh_token=" + settings.renewableToken;
@@ -68,47 +92,43 @@ namespace RiskPack
                 WSOIDCResult oidc = JsonConvert.DeserializeObject<WSOIDCResult>(json);
                 settings.sessionToken = oidc.id_token;
 
-                req = "/export/pdf/" + args[1];
+                req = String.Format("/export/pdf/{0}", args[1]);
                 client = WSAPIClient.ForPDF(settings);
 
                 var bytes = await client.GetByteArrayAsync(req);
-                string filename = Path.Combine(folder, Utilities.MakeSafeFilename(args[1] + ".pdf"));
-                using (var fs = new FileStream(filename, FileMode.Create, FileAccess.Write))
-                {
-                    fs.Write(bytes, 0, bytes.Length);
-                }
-                Console.WriteLine("{0} written, {1} bytes", filename, bytes.Length);
+                WriteFile(folder, args[1] + ".pdf", bytes);
 
                 client = WSAPIClient.ForJSON(settings);
                 req = String.Format("/api/attachments/{0}", MakeATCH(args[1]) );
-                Console.WriteLine(req);
                 json = await client.GetStringAsync(req);
-                Console.WriteLine(json);
 
                 Dictionary<String, WSAttachment> dict = JsonConvert.DeserializeObject<Dictionary<String, WSAttachment>>(json);
                 foreach (string key in dict.Keys)
                 {
                     WSAttachment att = dict[key];
-                    Console.WriteLine("{0} {1}", key, att.content_type);
-
                     client = WSAPIClient.ForMIMEType(settings, att.content_type);
                     req = string.Format("/api/attachments/{0}/{1}", MakeATCH(args[1]), key);
                     bytes = await client.GetByteArrayAsync(req);
-                    filename = Path.Combine(folder, Utilities.MakeSafeFilename(key));
-                    using (var fs = new FileStream(filename, FileMode.Create, FileAccess.Write))
-                    {
-                        fs.Write(bytes, 0, bytes.Length);
-                    }
-                    Console.WriteLine("{0} written, {1} bytes", filename, bytes.Length);
-
+                    WriteFile(folder, key, bytes);
                 }
             } 
             catch( Exception ex )
             {
                 Console.WriteLine(ex.Message);
+                Console.WriteLine("Last URL was {0}", req);
             }
-
         }
+
+        static void WriteFile( string folder, string filename, Byte[] bytes )
+        {
+            string fullfilename = Path.Combine(folder, WSUtilities.MakeSafeFilename(filename));
+            using (var fs = new FileStream(fullfilename, FileMode.Create, FileAccess.Write))
+            {
+                fs.Write(bytes, 0, bytes.Length);
+            }
+            Console.WriteLine("{0} written, {1} bytes", fullfilename, bytes.Length);
+        }
+
 
         static string MakeATCH( string riskid )
         {

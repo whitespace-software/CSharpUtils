@@ -13,9 +13,6 @@
     <Compile Remove="OIDCResult.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\WSShared\Results\WSUserMyDetails.cs">
-      <Link>WSUserMyDetails.cs</Link>
-    </Compile>
     <Compile Include="..\WSShared\Results\WSAttachment.cs">
       <Link>WSAttachment.cs</Link>
     </Compile>
@@ -27,6 +24,9 @@
     </Compile>
     <Compile Include="..\WSShared\WSAPIClient.cs">
       <Link>WSAPIClient.cs</Link>
+    </Compile>
+    <Compile Include="..\WSShared\WSUtilities.cs">
+      <Link>WSUtilities.cs</Link>
     </Compile>
   </ItemGroup>
 </Project>
