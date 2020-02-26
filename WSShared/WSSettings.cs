@@ -67,5 +67,10 @@ namespace WSShared
             if (this.bucket.Trim() == String.Empty)
                 throw new Exception("Settings bucket may not be empty");
         }
+
+        public string MakeOIDC_URL()
+        {
+            return "/sync/" + this.bucket + "/_oidc_refresh?refresh_token=" + this.renewableToken;
+        }
     }
 }

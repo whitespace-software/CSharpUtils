@@ -34,7 +34,7 @@ namespace WSShared
 {
     public class WSAPIClient : HttpClient
     {
-        public static WSAPIClient ForToken( WSSettings settings )
+        public static WSAPIClient ForToken(WSSettings settings)
         {
             var client = new WSAPIClient();
             client.BaseAddress = new Uri(settings.root);
@@ -42,20 +42,20 @@ namespace WSShared
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             return client;
         }
-        public static WSAPIClient ForJSON(WSSettings settings )
+        public static WSAPIClient ForJSON(WSSettings settings)
         {
             var client = new WSAPIClient();
             client.BaseAddress = new Uri(settings.root);
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", settings.sessionToken );
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", settings.sessionToken);
             return client;
         }
         public static WSAPIClient ForPDF(WSSettings settings)
         {
             return WSAPIClient.ForMIMEType(settings, "application/pdf");
         }
-        public static WSAPIClient ForMIMEType(WSSettings settings, string mimetype )
+        public static WSAPIClient ForMIMEType(WSSettings settings, string mimetype)
         {
             var client = new WSAPIClient();
             client.BaseAddress = new Uri(settings.root);
@@ -63,6 +63,29 @@ namespace WSShared
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(mimetype));
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", settings.sessionToken);
             return client;
+        }
+
+        public async Task<String> DoOIDC(WSSettings settings)
+        {
+            HttpResponseMessage response = await this.GetAsync(settings.MakeOIDC_URL());
+            string json = await response.Content.ReadAsStringAsync();
+
+            WSOIDCResult oidc = JsonConvert.DeserializeObject<WSOIDCResult>(json);
+            settings.sessionToken = oidc.id_token;
+
+            return json;
+        }
+
+        public async Task<String> DoGetJSON(string url)
+        {
+            HttpResponseMessage response = await this.GetAsync(url);
+            return await response.Content.ReadAsStringAsync();
+        }
+
+        public async Task<T> DoGet<T>(string url)
+        {
+            string json = await this.DoGetJSON(url);
+            return JsonConvert.DeserializeObject<T>(json);
         }
     }
 }

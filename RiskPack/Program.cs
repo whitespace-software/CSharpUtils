@@ -85,7 +85,7 @@ namespace RiskPack
                 string folder = WSUtilities.MakeSafeFilename(args[1]) + DateTime.Now.ToString("_ddMMyy_HHmmss");
                 Directory.CreateDirectory(folder);
 
-                req = "/sync/" + settings.bucket + "/_oidc_refresh?refresh_token=" + settings.renewableToken;
+                req = settings.MakeOIDC_URL();
                 HttpResponseMessage response = await client.GetAsync(req);
                 json = await response.Content.ReadAsStringAsync();
 
