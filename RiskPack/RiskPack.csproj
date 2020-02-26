@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="OIDCResult.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\WSShared\Results\WSUserMyDetails.cs">
+      <Link>WSUserMyDetails.cs</Link>
+    </Compile>
+    <Compile Include="..\WSShared\Results\WSAttachment.cs">
+      <Link>WSAttachment.cs</Link>
+    </Compile>
+    <Compile Include="..\WSShared\Results\WSOIDCResult.cs">
+      <Link>WSOIDCResult.cs</Link>
+    </Compile>
+    <Compile Include="..\WSShared\WSSettings.cs">
+      <Link>WSSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\WSShared\WSAPIClient.cs">
+      <Link>WSAPIClient.cs</Link>
+    </Compile>
+  </ItemGroup>
+</Project>
