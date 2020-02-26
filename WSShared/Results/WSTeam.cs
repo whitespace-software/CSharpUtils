@@ -22,17 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using System.Collections.Generic;
-
 namespace WSShared
 {
-    public class WSUserMyDetailsResult
+    public class WSTeam
     {
-        public string username;
-        public string companyName;
-        public string uniqueID;
-        public string role;
-        public string companyId;
-        public List<WSTeam> teams;
+        public string teamId;
+        public string name;
+        public string channel;
     }
 }
