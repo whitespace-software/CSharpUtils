@@ -1,32 +1,49 @@
-﻿using System;
+﻿/*
+MIT License
+
+Copyright (c) 2020 Whitespace Software Limited
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+using System;
 using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using System.IO;
-using Newtonsoft.Json;
+using WSShared;
 
 namespace RisksList
 {
-    public class OIDCResult
-    {
-        public string id_token;
-        public string session_id;
-        public string name;
-    }
-
-    public class RisksResult
+    class Risk
     {
         public string id;
-        public string umr;
+        public string rev;
         public string Status;
         public string InsuredName;
+        public string type;
+        public string createdAt;
+        public string updatedAt;
+        public string umr;
+        public string placingBrokerChannel;
+        public List<string> channels;
     }
-
     class Program
     {
-        static HttpClient client = new HttpClient();
-
         static void Main(string[] args)
         {
             RunAsync(args).GetAwaiter().GetResult();
@@ -34,54 +51,75 @@ namespace RisksList
 
         static async Task RunAsync(string[] args)
         {
-            if( args.Length < 1 )
+            if (args.Length < 1)
             {
-                Console.WriteLine("requires more arguments");
+                WSUtilities.PrintVersionMesssage("RisksList", "1.0");
+                Console.WriteLine("RisksList.exe [settings file]");
+                Console.WriteLine("RisksList.exe [settings file] UMR (value)");
                 return;
             }
-            SettingsFile settings;
             try
             {
-                settings = SettingsFile.Load(args[0]);
-            }
-            catch( Exception ex )
-            {
-                Console.WriteLine("ERROR {0}", ex.Message);
-                return;
-            }
-            client.BaseAddress = new Uri(settings.root);
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                Filter filter = new Filter( args );
+                
+                WSSettings settings = WSSettings.Load(args[0]);
+                WSAPIClient client = WSAPIClient.ForToken(settings);
+                _ = await client.DoOIDC(settings);
 
-            string json = String.Empty, req = String.Empty;
+                client = WSAPIClient.ForJSON(settings);
+                List<Risk> risks = await client.DoGet<List<Risk>>("/api/risks");
 
-            try
-            {
-                req = "/sync/" + settings.bucket + "/_oidc_refresh?refresh_token=" + settings.renewableToken;
-                HttpResponseMessage response = await client.GetAsync(req);
-                json = await response.Content.ReadAsStringAsync();
-
-                OIDCResult oidc = JsonConvert.DeserializeObject<OIDCResult>(json);
-
-                req = "/api/risks";
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", oidc.id_token);
-
-                response = await client.GetAsync(req);
-                json = await response.Content.ReadAsStringAsync();
-
-                List<RisksResult> list = JsonConvert.DeserializeObject<List<RisksResult>>(json);
-                Console.WriteLine(list.Count + " risks returned");
-                foreach (var item in list)
+                Console.WriteLine("{0} risks loaded", risks.Count );
+                foreach( var risk in risks )
                 {
-                    Console.WriteLine("{0} {1} {2} {3}", item.InsuredName, item.Status, item.umr, item.id);
+                    if (filter.Check(risk))
+                        Console.WriteLine(String.Join(" : ",
+                            new String[] { risk.id, risk.Status, risk.umr, risk.InsuredName }));
                 }
+
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine(e.Message);
-                Console.WriteLine(req);
-                Console.WriteLine(json);
+                Console.WriteLine(ex.Message);
+
             }
         }
     }
+
+    class Filter {
+        string operation = String.Empty;
+        string grail = String.Empty;
+
+        public Filter(string[] args)
+        {
+            if (args.Length < 3)
+                return;
+            var op = args[1].ToLower();
+            if (op == "umr" || op == "id" || op == "status" || op == "insuredname" )
+            {
+                operation = op;
+                grail = args[2].ToLower();
+            }
+            else
+            {
+                throw new Exception("Unrecognised filter operation " + args[2]);
+            }
+        }
+
+        public bool Check( Risk risk )
+        {
+            if (operation == String.Empty)
+                return true;
+            if (operation == "id")
+                return risk.id.ToLower().Contains(grail);
+            if (operation == "umr")
+                return risk.umr.ToLower().Contains(grail);
+            if (operation == "status")
+                return risk.Status.ToLower().Contains(grail);
+            if (operation == "insuredname")
+                return risk.InsuredName.ToLower().Contains(grail);
+            return false;
+        }
+    }
 }
+

@@ -8,5 +8,18 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
-
+  <ItemGroup>
+    <Compile Include="..\WSShared\WSSettings.cs">
+      <Link>WSSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\WSShared\WSAPIClient.cs">
+      <Link>WSAPIClient.cs</Link>
+    </Compile>
+    <Compile Include="..\WSShared\WSUtilities.cs">
+      <Link>WSUtilities.cs</Link>
+    </Compile>
+    <Compile Include="..\WSShared\Results\WSOIDCResult.cs">
+      <Link>WSOIDCResult.cs</Link>
+    </Compile>
+  </ItemGroup>
 </Project>
