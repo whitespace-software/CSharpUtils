@@ -35,10 +35,28 @@ namespace WSShared
         public string renewableToken;
         private string _session_token;
 
-        public string sessionToken
+        internal string sessionToken
         {
             get { return _session_token; }
             set { _session_token = value; }
+        }
+
+        public static string WriteExample( string filename )
+        {
+            WSSettings example = WSSettings.MakeExample();
+            try
+            {
+                using (StreamWriter sw = new StreamWriter( filename ))
+                {
+                    String str = JsonConvert.SerializeObject(example, Formatting.Indented);
+                    sw.WriteLine(str);
+                    return String.Format("{0} written", filename );
+                }
+            }
+            catch (Exception ex)
+            {
+                return String.Format("ERROR {0}", ex.Message);
+            }
         }
 
         public static WSSettings MakeExample()
