@@ -55,11 +55,22 @@ namespace RisksList
             {
                 WSUtilities.PrintVersionMesssage("RisksList", "1.0");
                 Console.WriteLine("RisksList.exe [settings file]");
+                Console.WriteLine("RisksList.exe [settings file] ID (value)");
                 Console.WriteLine("RisksList.exe [settings file] UMR (value)");
+                Console.WriteLine("RisksList.exe [settings file] STATUS (value)");
+                Console.WriteLine("RisksList.exe [settings file] INSUREDNAME (value)");
+                Console.WriteLine("RisksList.exe --example [settings file]");
                 return;
             }
             try
             {
+                if (args[0].ToLower() == "--example" && args.Length > 1)
+                {
+                    Console.WriteLine(WSSettings.WriteExample(args[1]));
+                    return;
+                }
+
+
                 Filter filter = new Filter( args );
                 
                 WSSettings settings = WSSettings.Load(args[0]);
