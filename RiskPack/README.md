@@ -1,4 +1,4 @@
-# RiskPack
+# RiskPack
 
 Creates a folder with the PDF version of a contract and all attachments
 
