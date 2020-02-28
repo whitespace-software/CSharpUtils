@@ -51,21 +51,7 @@ namespace RiskPack
             }
             if( args[0].ToLower() == "--example")
             {
-                WSSettings example = WSSettings.MakeExample();
-                try
-                {
-                    using( StreamWriter sw = new StreamWriter(args[1]))
-                    {
-                        String str = JsonConvert.SerializeObject(example,Formatting.Indented);
-                        sw.WriteLine(str);
-                        Console.WriteLine("{0} written", args[1]);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("ERROR {0}", ex.Message);
-                    return;
-                }
+                Console.WriteLine(WSSettings.WriteExample(args[1]));
                 return;
             }
             WSSettings settings;
@@ -78,19 +64,14 @@ namespace RiskPack
                 Console.WriteLine("ERROR {0}", ex.Message);
                 return;
             }
-            WSAPIClient client = WSAPIClient.ForToken(settings);
             string json = String.Empty, req = String.Empty;
             try
             {
                 string folder = WSUtilities.MakeSafeFilename(args[1]) + DateTime.Now.ToString("_ddMMyy_HHmmss");
                 Directory.CreateDirectory(folder);
 
-                req = settings.MakeOIDC_URL();
-                HttpResponseMessage response = await client.GetAsync(req);
-                json = await response.Content.ReadAsStringAsync();
-
-                WSOIDCResult oidc = JsonConvert.DeserializeObject<WSOIDCResult>(json);
-                settings.sessionToken = oidc.id_token;
+                WSAPIClient client = WSAPIClient.ForToken(settings);
+                _ = await client.DoOIDC(settings);
 
                 req = String.Format("/export/pdf/{0}", args[1]);
                 client = WSAPIClient.ForPDF(settings);
