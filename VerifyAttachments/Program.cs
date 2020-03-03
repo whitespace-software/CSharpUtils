@@ -57,8 +57,6 @@ namespace VerifyAttachments
                 client = WSAPIClient.ForJSON(settings);
                 string url = String.Format("/api/documents/{0}", args[1] + "::ATCH");
                 PlatformDocument doc = await client.DoGet<PlatformDocument>(url);
-                //string x = await client.GetStringAsync(url);
-                // When not found: "Response status code does not indicate success: 404 (Not Found)."
                 Console.WriteLine("{0} has {1} channel(s)", doc._id, doc.channels.Count);
 
                 url = string.Format("/api/risks/root/{0}", args[1]);
@@ -69,20 +67,13 @@ namespace VerifyAttachments
                     string prefix = "";
                     if (r.channels.Count > doc.channels.Count)
                         prefix = "ERROR: ";
-                    
                     Console.WriteLine("{0}{1} has {2} channel(s)", prefix, r.id, r.channels.Count);
                 }
-                //string x = await client.GetStringAsync(url);
-                //Console.WriteLine(x);
             }
             catch (Exception ex)
             {
                 Console.WriteLine("ERROR: " + ex.Message);
-
             }
         }
     }
-
-  
-
 }
