@@ -1,8 +1,11 @@
 # CSharpUtils
 Windows programs and command-line utilities to access Whitespace Platform APIs
 
+## Getting Started
 - [HelloWorld](HelloWorld/README.md) shows a simple example using our code to create a program with high-level code
 - [Standalone](StabdAlone/README.md) shows a simple example with all code inline
+
+## Useful Utilities
 - [RiskPack](RiskPack/README.md) creates a folder with PDF and Attachments for a risk
 - [RisksList](RisksList/README.md) lists risks the user may see, optionally with a simple filter
 
