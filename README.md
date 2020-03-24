@@ -8,6 +8,7 @@ Windows programs and command-line utilities to access Whitespace Platform APIs
 ## Useful Utilities
 - [RiskPack](RiskPack/README.md) creates a folder with PDF and Attachments for a risk
 - [RisksList](RisksList/README.md) lists risks the user may see, optionally with a simple filter
+- [EvidenceOfCover](EvidenceOfCover/README.md) creates an Evidence of Cover pdf using a template 
 
 ## Other Examples
 - [VerifyAttachments](VerifyAttachments/README.md) gets the number of channels in IC::ATCH and looks for more channels in /risks/root items
