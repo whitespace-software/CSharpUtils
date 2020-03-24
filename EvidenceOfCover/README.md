@@ -18,4 +18,5 @@ writes out an example settings file:
   "renewableToken": "Login to the platform and copy from the user settings panel, replacing this text"
 }
 ```
+This project includes a sample template file.
 

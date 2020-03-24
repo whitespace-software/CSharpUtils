@@ -48,7 +48,6 @@ namespace EvidenceOfCover
                 WSUtilities.PrintVersionMesssage("EvidenceOfCover", "1.0");
                 Console.WriteLine("EvidenceOfCover.exe [settings file] [json template] [riskID]");
                 Console.WriteLine("EvidenceOfCover.exe --example [settings file]");
-                Console.WriteLine("EvidenceOfCover.exe --template [template file]");
                 return;
             }
             if (args[0].ToLower() == "--example")
@@ -56,9 +55,9 @@ namespace EvidenceOfCover
                 Console.WriteLine(WSSettings.WriteExample(args[1]));
                 return;
             }
-            if (args[0].ToLower() == "--template")
+            if (args.Length < 3)
             {
-                Console.WriteLine( "NYI");
+                Console.WriteLine("EvidenceOfCover.exe [settings file] [json template] [riskID]");
                 return;
             }
             WSSettings settings;
@@ -71,19 +70,15 @@ namespace EvidenceOfCover
                 Console.WriteLine("ERROR {0}", ex.Message);
                 return;
             }
-            if (args.Length < 3)
-            {
-                Console.WriteLine("EvidenceOfCover.exe [settings file] [json template] [riskID]");
-                return;
-            }
-            if( !File.Exists( args[1]) )
-            {
-                Console.WriteLine("No template file " + args[1]);
-                return;
-            }
+
             string json = String.Empty, req = String.Empty;
             try
-            { 
+            {
+                if (!File.Exists(args[1]))
+                {
+                    Console.WriteLine("No template file " + args[1]);
+                    return;
+                }
                 String template = "";
                 using( StreamReader sr = new StreamReader( args[1]))
                 {
