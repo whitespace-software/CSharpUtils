@@ -45,7 +45,7 @@ namespace EvidenceOfCover
         {
             if (args.Length < 2)
             {
-                WSUtilities.PrintVersionMesssage("EvidenceOfCover", "1.0");
+                WSUtilities.PrintVersionMesssage("EvidenceOfCover", "1.1");
                 Console.WriteLine("EvidenceOfCover.exe [settings file] [json template] [riskID]");
                 Console.WriteLine("EvidenceOfCover.exe --example [settings file]");
                 return;
@@ -93,16 +93,67 @@ namespace EvidenceOfCover
                 foreach (Match m in matches)
                 {
                     String heading = m.Groups["heading"].Value;
-                    req = String.Format("/api/risks/{0}/lineitem/{1}/crlf", args[2], heading );
-                    RisksLineItemCRLFResponse text = await client.DoGet<RisksLineItemCRLFResponse>( req );
-                    Console.WriteLine( "{0} = {1}", heading, text.text );
+                    String tidied = "", fixedVariable = FixedVariable(heading);
+
+                    if (fixedVariable != null)
+                        tidied = fixedVariable;
+                    else
+                    {
+                        req = String.Format("/api/risks/{0}/lineitem/{1}/crlf", args[2], heading);
+                        RisksLineItemCRLFResponse text = await client.DoGet<RisksLineItemCRLFResponse>(req);
+                        if (text != null && text.text != null)
+                            tidied = text.text.Replace("\n", "\\n");
+                    }
+                    Console.WriteLine( "{0} = {1}", heading, tidied );
                     String grail = "[[" + heading + "]]";
-                    template = template.Replace(grail, text.text);
+                    template = template.Replace(grail, tidied );
                 }
+                // /api/lines/$IC/combinedSets
+                req = String.Format("/api/lines/{0}/combinedSets", WSUtilities.GetRoot( args[2] ) );
+                var signedlines = await client.DoGet<List<CombinedSet>>(req);
+                Decimal total = 0m;
+                PMTable table = new PMTable();
+                table.widths.Add("25%");
+                table.widths.Add("*");
+                List<PMCell> row = new List<PMCell>();
+
+                foreach (CombinedSet cs in signedlines)
+                {
+                    if (cs.type == "RWSignedLineSet")
+                    {
+                        foreach (Content c in cs.contents)
+                        {
+                            foreach (Impression i in c.impressions)
+                            {
+                                Console.WriteLine("{0} {1} {2}", cs.type, i.signedLinePercentageString, i.stamp.businessUnit);
+                                row = new List<PMCell>();
+                                row.Add(new PMCell(i.signedLinePercentageString + "%" ));
+                                row.Add(new PMCell(i.stamp.businessUnit));
+                                table.body.Add(row);
+                                Decimal signedLinePercentage;
+                                if (Decimal.TryParse(i.signedLinePercentageString, out signedLinePercentage))
+                                    total += signedLinePercentage;
+
+                            }
+                        }
+                    }
+                }
+                Console.WriteLine("Total {0}", total);
+
+                row = new List<PMCell>();
+                row.Add(new PMCell(total.ToString() + "%"));
+                row.Add(new PMCell(""));
+                table.body.Add(row);
+                String tableJSON = JsonConvert.SerializeObject(table, Formatting.Indented);
+                //Console.WriteLine(tableJSON);
+                template = template.Replace("\"signed_lines_table\"", tableJSON);
+
+                //String input = "tmp" + DateTime.Now.ToString("ddMMyyyy_HHmmss") + ".json";
                 String pdffile = "tmp" + DateTime.Now.ToString("ddMMyyyy_HHmmss") + ".pdf";
 
                 // https://stackoverflow.com/questions/36625881/how-do-i-pass-an-object-to-httpclient-postasync-and-serialize-as-a-json-body
                 var buffer = System.Text.Encoding.UTF8.GetBytes(template);
+                //WriteFile(input, buffer);
                 var byteContent = new ByteArrayContent(buffer);
                 byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                 req = "/pdfmake/";
@@ -115,6 +166,15 @@ namespace EvidenceOfCover
                 Console.WriteLine(ex.Message);
                 Console.WriteLine("Last URL was {0}", req);
             }
+        }
+
+        static String FixedVariable( string heading)
+        {
+            if(heading.ToLower() == "date" )
+            {
+                return DateTime.Now.ToString("d MMMM yyyy");
+            }
+            return null;
         }
 
         static void WriteFile( string fullfilename, Byte[] bytes)
@@ -130,4 +190,50 @@ namespace EvidenceOfCover
     public class RisksLineItemCRLFResponse {
         public String text;
     }
+
+    public class CombinedSet
+    {
+        public String type;
+        public String parentDocID;
+        public List<Content> contents;
+    }
+
+    public class Content {
+        public List<Impression> impressions;
+    }
+
+    public class Impression {
+        public String signedLinePercentageString;
+        public Stamp stamp;
+    }
+
+
+    public class Stamp
+    {
+        public String stampType;
+        public String businessUnit;
+        public String uniqueID;
+        public String bureauMarket;
+        public String bureauSubMarket;
+        public String bureauMarketCode;
+    }
+
+    public class PMTable
+    {
+        public List<String> widths = new List<string>();
+        public List<List<PMCell>> body = new List<List<PMCell>>();
+    }
+
+    public class PMCell
+    {
+        public String text;
+        public bool bold;
+        public PMCell( String text )
+        {
+            this.text = text;
+            this.bold = false;
+        }
+
+    }
+
 }

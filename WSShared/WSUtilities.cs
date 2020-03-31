@@ -49,5 +49,13 @@ namespace WSShared
             }
             return result.ToString();
         }
+
+        public static string GetRoot( String docid )
+        {
+            var pos = docid.IndexOf("::");
+            if (pos >= 0)
+                return docid.Substring(0, pos);
+            return docid;
+        }
     }
 }
