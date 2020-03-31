@@ -20,3 +20,32 @@ writes out an example settings file:
 ```
 This project includes a sample template file.
 
+- [[Date]] will be replaced by today's date
+- [[UMR]], [[Insured]] etc will be replaced by the text of a line item with that MRC Heading
+- "table": "signed_lines_table" will be replaced by a table of signed line percentages 
+```
+    {
+        "text": "Date: [[Date]]",
+        "alignment": "right",
+        "margin": [0, 20, 20, 20]
+    }
+    ...
+    "body": [
+        [{
+            "text": "Policy Number:",
+            "style": "second_title"
+        },
+        {
+            "text": "[[UMR]]"
+        }
+    ],
+    ...
+    {
+      "layout": {
+        "defaultBorder": false
+      },
+      "style":"table_down",
+      "table": "signed_lines_table"
+    },
+```
+ 
