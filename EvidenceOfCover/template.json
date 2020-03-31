@@ -13,6 +13,11 @@
         "style": "header"
       },
       {
+        "text": "Date: [[Date]]",
+        "alignment": "right",
+        "margin": [0, 20, 20, 20]
+    },
+      {
         "style": "tableMRC",
         "layout": {
           "defaultBorder": false
@@ -58,18 +63,20 @@
               {
                 "text": "[[ContractType]]"
               }
-            ],
-            [
-              {
-                "text": "Limit of Liability:",
-                "style": "MRCHeading"
-              },
-              {
-                "text": "[[LimitOfLiability]]"
-              }
             ]
           ]
         }
+      },
+      {
+        "text": "Signed Lines",
+        "style": "header"
+      },
+      {
+        "layout": {
+          "defaultBorder": false
+        },
+        "style":"table_down",
+        "table": "signed_lines_table"
       },
       {
         "stack": [
